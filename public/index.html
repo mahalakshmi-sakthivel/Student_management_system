@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Student Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --wine: #722F37;
+      --wine-dark: #4A0E1A;
+      --wine-light: #9B3A47;
+      --black: #0D0D0D;
+      --charcoal: #1A1A1A;
+      --charcoal-light: #222222;
+      --field-bg: #262626;
+      --text: #F5F0F0;
+      --text-muted: #A8A0A0;
+      --accent: #C9A27E;
+      --success: #4CAF6A;
+      --error: #E0434F;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--black); color: var(--text); height: 100vh; overflow: hidden; }
+    
+    /* Login View */
+    #loginView { display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--black); }
+    .login-card {
+      background: var(--charcoal); width: 420px; padding: 40px 36px; border-radius: 12px;
+      border: 1px solid #333; box-shadow: 0 16px 40px rgba(0,0,0,0.8); text-align: center;
+    }
+    .logo { font-size: 54px; margin-bottom: 8px; }
+    .login-title { font-size: 24px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+    .login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+    .form-group { text-align: left; margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .input-ctrl {
+      width: 100%; background: var(--field-bg); border: 1px solid #444; border-radius: 6px;
+      padding: 10px 14px; font-size: 14px; color: var(--text); outline: none; transition: border 0.2s;
+    }
+    .input-ctrl:focus { border-color: var(--wine); box-shadow: 0 0 0 2px rgba(114,47,55,0.4); }
+    .btn-primary {
+      width: 100%; background: var(--wine); color: #FFF; border: none; padding: 12px; border-radius: 6px;
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 10px;
+    }
+    .btn-primary:hover { background: var(--wine-light); }
+    .demo-pill {
+      background: #2a1a1e; border: 1px dashed var(--accent); color: var(--accent); padding: 8px 12px;
+      border-radius: 6px; font-size: 12px; margin-top: 18px; cursor: pointer; transition: 0.2s;
+    }
+    .demo-pill:hover { background: #3c2027; }
+    .alert-banner { color: var(--error); font-size: 13px; margin-bottom: 14px; display: none; }
+
+    /* Main App Layout */
+    #appView { display: none; height: 100vh; flex-direction: column; }
+    header.topbar {
+      background: var(--wine); height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--accent); }
+    .user-actions { display: flex; align-items: center; gap: 16px; }
+    .badge-admin { font-size: 13px; font-weight: 600; color: #fff; background: var(--wine-dark); padding: 6px 12px; border-radius: 20px; }
+    .btn-logout {
+      background: var(--wine-dark); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 14px;
+      border-radius: 4px; font-size: 13px; cursor: pointer; transition: 0.2s;
+    }
+    .btn-logout:hover { background: var(--error); }
+
+    .main-body { display: flex; flex: 1; height: calc(100vh - 56px); }
+    aside.sidebar {
+      width: 250px; background: var(--wine-dark); display: flex; flex-direction: column;
+      padding: 20px 12px; border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .sidebar-heading { font-size: 11px; font-weight: 700; color: var(--accent); padding: 0 12px 12px; letter-spacing: 1px; }
+    .nav-btn {
+      background: transparent; border: none; color: var(--text); padding: 12px 16px; border-radius: 6px;
+      font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; display: flex; align-items: center;
+      gap: 12px; transition: 0.2s; margin-bottom: 4px;
+    }
+    .nav-btn:hover { background: var(--wine-light); color: #fff; }
+    .nav-btn.active {
+      background: var(--wine); color: #fff; border-left: 4px solid var(--accent); border-radius: 2px 6px 6px 2px;
+    }
+    .sidebar-footer { margin-top: auto; padding: 12px; font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+    main.content { flex: 1; background: var(--black); padding: 28px 36px; overflow-y: auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    h2.page-title { font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+    p.page-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* Cards & Stats */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .kpi-card {
+      background: var(--charcoal); padding: 20px; border-radius: 8px; border: 1px solid #2a2a2a;
+    }
+    .kpi-title { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .kpi-val { font-size: 32px; font-weight: 700; color: var(--text); }
+    .kpi-card:nth-child(1) .kpi-val { color: var(--accent); }
+    .kpi-card:nth-child(2) .kpi-val { color: #5dade2; }
+    .kpi-card:nth-child(3) .kpi-val { color: #f48fb1; }
+    .kpi-card:nth-child(4) .kpi-val { color: var(--success); }
+
+    /* Forms */
+    .card {
+      background: var(--charcoal); padding: 26px; border-radius: 8px; border: 1px solid #2a2a2a; margin-bottom: 24px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    .btn-secondary {
+      background: #333; color: var(--text); border: none; padding: 10px 20px; border-radius: 6px;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-secondary:hover { background: #444; }
+    .btn-danger {
+      background: var(--error); color: #fff; border: none; padding: 10px 20px; border-radius: 6px;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-danger:hover { background: #c0392b; }
+
+    /* Tables */
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .table-container { background: var(--charcoal); border-radius: 8px; border: 1px solid #2a2a2a; overflow: hidden; }
+    table.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    table.data-table th {
+      background: var(--wine); color: #fff; padding: 14px 16px; font-weight: 700; font-size: 13px; text-transform: uppercase;
+    }
+    table.data-table td { padding: 12px 16px; border-bottom: 1px solid #262626; }
+    table.data-table tr:nth-child(even) { background: var(--charcoal-light); }
+    table.data-table tr:hover { background: #2f171b; cursor: pointer; }
+    .badge-dept { background: #332024; color: var(--accent); padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--wine); color: #fff; padding: 14px 22px;
+      border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 9999; font-weight: 600;
+      border-left: 4px solid var(--accent);
+    }
+
+    /* Mobile Drawer & Responsive Adaptations */
+    .mobile-menu-btn {
+      display: none; background: transparent; border: none; color: var(--accent); font-size: 22px;
+      cursor: pointer; padding: 4px 8px; margin-right: 6px; line-height: 1;
+    }
+    .sidebar-close-btn {
+      display: none; background: transparent; border: none; color: var(--accent); font-size: 20px;
+      cursor: pointer; padding: 4px 8px;
+    }
+    .sidebar-header-row {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+    }
+    #sidebarBackdrop {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75); z-index: 998; backdrop-filter: blur(3px);
+    }
+
+    /* Mobile screens (phones & small tablets) */
+    @media (max-width: 768px) {
+      .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+      .sidebar-close-btn { display: block; }
+      header.topbar { padding: 0 14px; height: 52px; }
+      .brand { font-size: 14px; gap: 6px; }
+      .badge-admin { display: none; }
+      .btn-logout { padding: 5px 12px; font-size: 12px; }
+      aside.sidebar {
+        position: fixed; left: -290px; top: 0; bottom: 0; width: 270px; height: 100vh;
+        z-index: 999; box-shadow: 4px 0 30px rgba(0,0,0,0.85);
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px 14px;
+      }
+      aside.sidebar.mobile-open { left: 0; }
+      main.content { padding: 18px 14px; height: calc(100vh - 52px); }
+      h2.page-title { font-size: 20px; }
+      p.page-desc { font-size: 13px; margin-bottom: 18px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+      .kpi-card { padding: 14px 12px; }
+      .kpi-title { font-size: 11px; margin-bottom: 6px; }
+      .kpi-val { font-size: 24px; }
+      .form-grid { grid-template-columns: 1fr; gap: 14px; }
+      .form-group[style*="span 2"] { grid-column: span 1 !important; }
+      .card { padding: 18px 14px; margin-bottom: 18px; }
+      .table-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+      .table-toolbar input { width: 100% !important; }
+      .table-toolbar > div { display: flex; justify-content: space-between; }
+      .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table.data-table { min-width: 620px; }
+      table.data-table th, table.data-table td { padding: 10px 12px; font-size: 13px; }
+      .login-card { width: 90%; max-width: 380px; padding: 28px 18px; }
+      .logo { font-size: 44px; }
+      .login-title { font-size: 20px; }
+      .login-sub { font-size: 13px; margin-bottom: 20px; }
+      .input-ctrl { font-size: 16px; padding: 11px 14px; }
+      .btn-primary, .btn-secondary, .btn-danger { padding: 11px 16px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOGIN SCREEN -->
+  <div id="loginView">
+    <div class="login-card">
+      <div class="logo">🎓</div>
+      <h1 class="login-title">STUDENT PORTAL</h1>
+      <p class="login-sub">Administrator Sign In</p>
+      <div id="loginAlert" class="alert-banner"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" class="input-ctrl" value="admin" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" class="input-ctrl" value="admin123" required />
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%">LOGIN TO DASHBOARD</button>
+      </form>
+      <div class="demo-pill" onclick="fillDemo()">
+        ⚡ Click here to auto-fill Demo Account (admin / admin123)
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN APP DASHBOARD -->
+  <div id="appView">
+    <div id="sidebarBackdrop" onclick="toggleMobileMenu()"></div>
+    <header class="topbar">
+      <div class="brand">
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+        <span>🎓</span> STUDENT MANAGEMENT SYSTEM
+      </div>
+      <div class="user-actions">
+        <span class="badge-admin" id="adminBadge">👤 Admin: admin</span>
+        <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+      </div>
+    </header>
+
+    <div class="main-body">
+      <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-header-row">
+          <div class="sidebar-heading" style="padding:0;">MAIN NAVIGATION</div>
+          <button class="sidebar-close-btn" onclick="toggleMobileMenu()" aria-label="Close Menu">✕</button>
+        </div>
+        <button class="nav-btn active" onclick="showTab('overview')">📊  Dashboard Overview</button>
+        <button class="nav-btn" onclick="showTab('add')">➕  Add Student</button>
+        <button class="nav-btn" onclick="showTab('view')">📋  View All Students</button>
+        <button class="nav-btn" onclick="showTab('update')">✏️  Update Student</button>
+        <button class="nav-btn" onclick="showTab('search')">🔍  Search & Delete</button>
+        
+        <div class="sidebar-footer">
+          <div>Version: 1.0</div>
+          <div>Theme: Wine Red & Black</div>
+          <div>Backend: Java & MySQL (Vercel Ready)</div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <!-- Tab 1: Overview -->
+        <div id="tab-overview" class="tab-content active">
+          <h2 class="page-title">📊 Dashboard Overview</h2>
+          <p class="page-desc">Summary metrics for institutional enrollment.</p>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-title">TOTAL REGISTERED</div>
+              <div class="kpi-val" id="kpiTotal">0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">DEPARTMENTS</div>
+              <div class="kpi-val" id="kpiDepts">0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">MALE STUDENTS</div>
+              <div class="kpi-val" id="kpiMale">0</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">FEMALE STUDENTS</div>
+              <div class="kpi-val" id="kpiFemale">0</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="color:var(--accent); margin-bottom:12px;">⚡ Quick Operations</h3>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button class="btn-primary" style="width:auto;" onclick="showTab('add')">➕ Register New Student</button>
+              <button class="btn-secondary" onclick="showTab('view')">📋 Browse All Records</button>
+              <button class="btn-secondary" onclick="showTab('search')">🔍 Search Student Directory</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Add Student -->
+        <div id="tab-add" class="tab-content">
+          <h2 class="page-title">➕ Add New Student</h2>
+          <p class="page-desc">Register a student into the database with full constraint validation.</p>
+          <div class="card">
+            <form id="addForm" onsubmit="saveStudent(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Student ID (Numeric)</label>
+                  <input type="number" id="addId" class="input-ctrl" placeholder="e.g. 1011" required />
+                </div>
+                <div class="form-group">
+                  <label>Full Name (Letters & Spaces)</label>
+                  <input type="text" id="addName" class="input-ctrl" placeholder="e.g. Rahul Sharma" required />
+                </div>
+                <div class="form-group">
+                  <label>Date of Birth</label>
+                  <input type="date" id="addDob" class="input-ctrl" required />
+                </div>
+                <div class="form-group">
+                  <label>Gender</label>
+                  <select id="addGender" class="input-ctrl" required>
+                    <option value="">-- Select Gender --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Department</label>
+                  <select id="addDept" class="input-ctrl" required></select>
+                </div>
+                <div class="form-group">
+                  <label>Phone Number (10 digits)</label>
+                  <input type="tel" id="addPhone" class="input-ctrl" placeholder="e.g. 9876543210" maxlength="10" required />
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label>Email Address</label>
+                  <input type="email" id="addEmail" class="input-ctrl" placeholder="student@example.com" required />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="reset" class="btn-secondary">Clear Form</button>
+                <button type="submit" class="btn-primary" style="width:auto;">Save Student Record</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab 3: View All Students -->
+        <div id="tab-view" class="tab-content">
+          <h2 class="page-title">📋 Student Directory</h2>
+          <p class="page-desc">Filter, sort, and export registered students.</p>
+          <div class="table-toolbar">
+            <input type="text" id="tableSearch" class="input-ctrl" style="width:320px;" placeholder="🔍 Instant search by any field..." oninput="renderStudentsTable()" />
+            <div style="display:flex; gap:10px;">
+              <button class="btn-secondary" onclick="loadData()">↻ Refresh</button>
+              <button class="btn-primary" style="width:auto;" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Full Name</th>
+                  <th>DOB</th>
+                  <th>Gender</th>
+                  <th>Department</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 4: Update Student -->
+        <div id="tab-update" class="tab-content">
+          <h2 class="page-title">✏️ Update Student Record</h2>
+          <p class="page-desc">Select a student from the dropdown or table to edit their record.</p>
+          <div class="card">
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Select Student to Edit</label>
+              <select id="updateSelect" class="input-ctrl" onchange="populateUpdateForm()"></select>
+            </div>
+            <form id="updateForm" onsubmit="commitUpdate(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Student ID (Primary Key - Locked)</label>
+                  <input type="number" id="upId" class="input-ctrl" readonly style="background:#1c1c1c;" />
+                </div>
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" id="upName" class="input-ctrl" required />
+                </div>
+                <div class="form-group">
+                  <label>Date of Birth</label>
+                  <input type="date" id="upDob" class="input-ctrl" required />
+                </div>
+                <div class="form-group">
+                  <label>Gender</label>
+                  <select id="upGender" class="input-ctrl" required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Department</label>
+                  <select id="upDept" class="input-ctrl" required></select>
+                </div>
+                <div class="form-group">
+                  <label>Phone Number (10 digits)</label>
+                  <input type="tel" id="upPhone" class="input-ctrl" maxlength="10" required />
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label>Email Address</label>
+                  <input type="email" id="upEmail" class="input-ctrl" required />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" style="width:auto;">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab 5: Search & Delete -->
+        <div id="tab-search" class="tab-content">
+          <h2 class="page-title">🔍 Search & Delete Student</h2>
+          <p class="page-desc">Find a student by ID or Name, inspect details, and remove with confirmation.</p>
+          <div class="card">
+            <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+              <input type="text" id="searchQuery" class="input-ctrl" style="flex:1; min-width:200px;" placeholder="Enter Student ID or Name..." />
+              <button class="btn-primary" style="width:auto;" onclick="doSearch()">Search</button>
+              <button class="btn-secondary" onclick="resetSearch()">Reset</button>
+            </div>
+            <div id="searchResults" class="table-container" style="max-height: 280px; overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>ID</th><th>Name</th><th>Department</th><th>Email</th><th>Action</th></tr>
+                </thead>
+                <tbody id="searchTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div id="toast"></div>
+
+  <script>
+    const INITIAL_STUDENTS = [
+      { id: 1001, name: "Aarav Sharma", dob: "2003-05-14", gender: "Male", departmentId: 1, departmentName: "Computer Science", email: "aarav.sharma@example.com", phone: "9876543210" },
+      { id: 1002, name: "Diya Patel", dob: "2003-08-22", gender: "Female", departmentId: 2, departmentName: "Information Technology", email: "diya.patel@example.com", phone: "9876543211" },
+      { id: 1003, name: "Rohan Verma", dob: "2002-11-05", gender: "Male", departmentId: 3, departmentName: "Electronics and Communication", email: "rohan.verma@example.com", phone: "9876543212" },
+      { id: 1004, name: "Ananya Iyer", dob: "2003-02-18", gender: "Female", departmentId: 1, departmentName: "Computer Science", email: "ananya.iyer@example.com", phone: "9876543213" },
+      { id: 1005, name: "Karthik Raja", dob: "2002-09-30", gender: "Male", departmentId: 4, departmentName: "Mechanical Engineering", email: "karthik.raja@example.com", phone: "9876543214" },
+      { id: 1006, name: "Pooja Reddy", dob: "2003-07-12", gender: "Female", departmentId: 2, departmentName: "Information Technology", email: "pooja.reddy@example.com", phone: "9876543215" },
+      { id: 1007, name: "Siddharth Menon", dob: "2002-04-25", gender: "Male", departmentId: 1, departmentName: "Computer Science", email: "siddharth.m@example.com", phone: "9876543216" },
+      { id: 1008, name: "Sneha Mukherjee", dob: "2003-12-03", gender: "Female", departmentId: 3, departmentName: "Electronics and Communication", email: "sneha.m@example.com", phone: "9876543217" },
+      { id: 1009, name: "Varun Nair", dob: "2002-06-19", gender: "Male", departmentId: 5, departmentName: "Civil Engineering", email: "varun.nair@example.com", phone: "9876543218" },
+      { id: 1010, name: "Meera Nambiar", dob: "2003-10-08", gender: "Female", departmentId: 1, departmentName: "Computer Science", email: "meera.nambiar@example.com", phone: "9876543219" }
+    ];
+
+    const INITIAL_DEPARTMENTS = [
+      { id: 1, name: "Computer Science" },
+      { id: 2, name: "Information Technology" },
+      { id: 3, name: "Electronics and Communication" },
+      { id: 4, name: "Mechanical Engineering" },
+      { id: 5, name: "Civil Engineering" }
+    ];
+
+    let allStudents = [];
+    let allDepartments = INITIAL_DEPARTMENTS;
+
+    // Load from LocalStorage if present for instant state persistence on Vercel
+    function initStore() {
+      const saved = localStorage.getItem("sms_students");
+      if (saved) {
+        try { allStudents = JSON.parse(saved); } catch(e) { allStudents = [...INITIAL_STUDENTS]; }
+      } else {
+        allStudents = [...INITIAL_STUDENTS];
+        persistStore();
+      }
+    }
+
+    function persistStore() {
+      localStorage.setItem("sms_students", JSON.stringify(allStudents));
+    }
+
+    function fillDemo() {
+      document.getElementById('username').value = 'admin';
+      document.getElementById('password').value = 'admin123';
+      toast('Demo credentials populated! Click Login.');
+    }
+
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value.trim();
+      const alertBox = document.getElementById('loginAlert');
+      
+      // Try backend endpoint first, fallback to demo verification
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loginSuccess(data.username);
+          return;
+        }
+      } catch (ignored) {}
+
+      // Client verification fallback
+      if (u === 'admin' && p === 'admin123') {
+        loginSuccess('admin');
+      } else {
+        alertBox.innerText = 'Invalid username or password (default: admin / admin123)';
+        alertBox.style.display = 'block';
+      }
+    };
+
+    function loginSuccess(uname) {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('appView').style.display = 'flex';
+      document.getElementById('adminBadge').innerText = '👤 Admin: ' + uname;
+      loadData();
+      toast('Logged in successfully!');
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to log out?')) {
+        document.getElementById('appView').style.display = 'none';
+        document.getElementById('loginView').style.display = 'flex';
+        toast('Logged out successfully.');
+      }
+    }
+
+    function toggleMobileMenu() {
+      const sb = document.getElementById('mainSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      const isOpen = sb.classList.toggle('mobile-open');
+      bd.style.display = isOpen ? 'block' : 'none';
+    }
+
+    function closeMobileMenu() {
+      const sb = document.getElementById('mainSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      if (sb) sb.classList.remove('mobile-open');
+      if (bd) bd.style.display = 'none';
+    }
+
+    function showTab(tabId) {
+      closeMobileMenu();
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+      
+      const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.innerText.toLowerCase().includes(tabId));
+      if (btn) btn.classList.add('active');
+      
+      if (tabId === 'overview') updateKPIs();
+      if (tabId === 'view') renderStudentsTable();
+      if (tabId === 'update') populateUpdateDropdown();
+      if (tabId === 'search') renderSearchTable(allStudents);
+    }
+
+    async function loadData() {
+      initStore();
+      try {
+        const [dRes, sRes] = await Promise.all([
+          fetch('/api/departments').catch(() => null),
+          fetch('/api/students').catch(() => null)
+        ]);
+        if (dRes && dRes.ok) allDepartments = await dRes.json();
+        if (sRes && sRes.ok) {
+          const apiStudents = await sRes.json();
+          if (Array.isArray(apiStudents) && apiStudents.length > 0) {
+            allStudents = apiStudents;
+            persistStore();
+          }
+        }
+      } catch (ignored) {}
+
+      populateDeptDropdowns();
+      updateKPIs();
+      renderStudentsTable();
+      populateUpdateDropdown();
+      renderSearchTable(allStudents);
+    }
+
+    function populateDeptDropdowns() {
+      const addDept = document.getElementById('addDept');
+      const upDept = document.getElementById('upDept');
+      let html = '<option value="">-- Select Department --</option>';
+      allDepartments.forEach(d => {
+        html += `<option value="${d.id}">${d.name}</option>`;
+      });
+      addDept.innerHTML = html;
+      upDept.innerHTML = html;
+    }
+
+    function updateKPIs() {
+      document.getElementById('kpiTotal').innerText = allStudents.length;
+      document.getElementById('kpiDepts').innerText = allDepartments.length;
+      const males = allStudents.filter(s => s.gender === 'Male').length;
+      const females = allStudents.filter(s => s.gender === 'Female').length;
+      document.getElementById('kpiMale').innerText = males;
+      document.getElementById('kpiFemale').innerText = females;
+    }
+
+    function renderStudentsTable() {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      const filtered = allStudents.filter(s => 
+        s.id.toString().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        (s.departmentName && s.departmentName.toLowerCase().includes(q)) ||
+        s.email.toLowerCase().includes(q)
+      );
+      
+      const tbody = document.getElementById('studentsTbody');
+      tbody.innerHTML = filtered.map(s => `
+        <tr>
+          <td><strong>#${s.id}</strong></td>
+          <td>${s.name}</td>
+          <td>${s.dob}</td>
+          <td>${s.gender}</td>
+          <td><span class="badge-dept">${s.departmentName || 'N/A'}</span></td>
+          <td>${s.email}</td>
+          <td>${s.phone}</td>
+          <td>
+            <button class="btn-secondary" style="padding:4px 8px; font-size:12px;" onclick="editFromRow(${s.id})">Edit</button>
+            <button class="btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteStudent(${s.id}, '${s.name}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function saveStudent(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('addId').value);
+      const name = document.getElementById('addName').value.trim();
+      const dob = document.getElementById('addDob').value;
+      const gender = document.getElementById('addGender').value;
+      const deptId = parseInt(document.getElementById('addDept').value);
+      const email = document.getElementById('addEmail').value.trim();
+      const phone = document.getElementById('addPhone').value.trim();
+
+      if (allStudents.some(s => s.id === id)) {
+        alert('Student ID ' + id + ' already exists!');
+        return;
+      }
+      if (allStudents.some(s => s.email.toLowerCase() === email.toLowerCase())) {
+        alert('Email ' + email + ' is already registered!');
+        return;
+      }
+
+      const dept = allDepartments.find(d => d.id === deptId);
+      const newStudent = {
+        id, name, dob, gender,
+        departmentId: deptId,
+        departmentName: dept ? dept.name : "Dept " + deptId,
+        email, phone
+      };
+
+      allStudents.push(newStudent);
+      persistStore();
+
+      // Async sync to API if available
+      fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStudent)
+      }).catch(() => {});
+
+      toast('✓ Student added successfully!');
+      document.getElementById('addForm').reset();
+      updateKPIs();
+      renderStudentsTable();
+      populateUpdateDropdown();
+      showTab('view');
+    }
+
+    function populateUpdateDropdown() {
+      const sel = document.getElementById('updateSelect');
+      sel.innerHTML = '<option value="">-- Choose a student to edit --</option>' +
+        allStudents.map(s => `<option value="${s.id}">#${s.id} - ${s.name} (${s.departmentName})</option>`).join('');
+    }
+
+    function populateUpdateForm() {
+      const id = parseInt(document.getElementById('updateSelect').value);
+      const s = allStudents.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('upId').value = s.id;
+      document.getElementById('upName').value = s.name;
+      document.getElementById('upDob').value = s.dob;
+      document.getElementById('upGender').value = s.gender;
+      document.getElementById('upDept').value = s.departmentId;
+      document.getElementById('upEmail').value = s.email;
+      document.getElementById('upPhone').value = s.phone;
+    }
+
+    function editFromRow(id) {
+      showTab('update');
+      document.getElementById('updateSelect').value = id;
+      populateUpdateForm();
+    }
+
+    async function commitUpdate(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('upId').value);
+      const name = document.getElementById('upName').value.trim();
+      const dob = document.getElementById('upDob').value;
+      const gender = document.getElementById('upGender').value;
+      const deptId = parseInt(document.getElementById('upDept').value);
+      const email = document.getElementById('upEmail').value.trim();
+      const phone = document.getElementById('upPhone').value.trim();
+
+      const idx = allStudents.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        const dept = allDepartments.find(d => d.id === deptId);
+        allStudents[idx] = {
+          id, name, dob, gender,
+          departmentId: deptId,
+          departmentName: dept ? dept.name : "Dept " + deptId,
+          email, phone
+        };
+        persistStore();
+
+        fetch('/api/students', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(allStudents[idx])
+        }).catch(() => {});
+
+        toast('✓ Record updated successfully!');
+        updateKPIs();
+        renderStudentsTable();
+        showTab('view');
+      }
+    }
+
+    function renderSearchTable(list) {
+      const tbody = document.getElementById('searchTbody');
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No records found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(s => `
+        <tr>
+          <td><strong>#${s.id}</strong></td>
+          <td>${s.name}</td>
+          <td>${s.departmentName || 'N/A'}</td>
+          <td>${s.email}</td>
+          <td>
+            <button class="btn-danger" style="padding:4px 10px; font-size:12px;" onclick="deleteStudent(${s.id}, '${s.name}')">🗑 Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function doSearch() {
+      const q = document.getElementById('searchQuery').value.trim().toLowerCase();
+      const matches = allStudents.filter(s => 
+        s.id.toString().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q)
+      );
+      renderSearchTable(matches);
+    }
+
+    function resetSearch() {
+      document.getElementById('searchQuery').value = '';
+      renderSearchTable(allStudents);
+    }
+
+    async function deleteStudent(id, name) {
+      if (!confirm(`Are you sure you want to permanently delete student #${id} (${name})?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      allStudents = allStudents.filter(s => s.id !== id);
+      persistStore();
+
+      fetch('/api/students?id=' + id, { method: 'DELETE' }).catch(() => {});
+
+      toast(`Student #${id} deleted.`);
+      updateKPIs();
+      renderStudentsTable();
+      populateUpdateDropdown();
+      renderSearchTable(allStudents);
+    }
+
+    function exportCSV() {
+      let csv = 'Student ID,Full Name,DOB,Gender,Department,Email,Phone\n';
+      allStudents.forEach(s => {
+        csv += `"${s.id}","${s.name}","${s.dob}","${s.gender}","${s.departmentName}","${s.email}","${s.phone}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'students_export.csv';
+      a.click();
+      toast('Exported students_export.csv');
+    }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    // Auto-initialize on page load
+    window.onload = () => {
+      initStore();
+    };
+  </script>
+</body>
+</html>
